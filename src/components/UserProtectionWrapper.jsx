@@ -2,43 +2,33 @@ import React from "react";
 import { useState } from "react";
 import axios from "axios";
 import { useEffect } from "react";
+import { getMyProfile } from "../services/authService";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../stores/authSlice";
 
 function UserProtectionWrapper({ children }) {
-    const [user, setUser] = useState();
-    const [isLoading, setIsLoading] = useState(false);
+    const dispatch = useDispatch()
+    const {loading, userInfo, success} = useSelector(state => state.auth)
 
     async function getUser() {
-        setIsLoading(true);
         try {
-            const res = await axios.get(
-                `${import.meta.env.VITE_BASE_URL}/api/v1/auth/me`,
-                {
-                    withCredentials: true,
-                }
-            );
+            const res = await getMyProfile()
             if (res.status === 200) {
-                setUser(res.data);
-                setIsLoading(false);
+                dispatch(login(res.data));
             }else{
-               setUser()
-               setIsLoading(false) 
+                console.log("Failed to get user data :",error)
             }
         } catch (error) {
             console.log("Failed to fetch the user :", error);
-            setIsLoading(false);
         }
     }
-    console.log(user);
-
+    console.log(userInfo)
     useEffect(() => {
         getUser();
     }, []);
 
-    if (isLoading) {
-        return <div className="font-semibold text-xl p-4">Loading....</div>;
-    }
 
-    if(!user){
+    if(!success){
         return <>
             <h2>Unauthorized Access</h2>
         </>
