@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -7,19 +7,66 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { logoutUser } from "../services/authService";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../stores/authSlice";
-
+import { IoSend } from "react-icons/io5";
+import { getHistory, getResponse } from "../services/chatService";
+import { addChat } from "../stores/chatSlice";
+import ReactMarkdown from "react-markdown";
+import { addHistory } from "../stores/chatSlice";
 function Home() {
-    const {userInfo} = useSelector(state => state.auth)
+    const [userQuestion, setUserQuestion] = useState("");
+
+    const { userInfo } = useSelector((state) => state.auth);
+    const { chats } = useSelector((state) => state.chat);
+
     const navigate = useNavigate();
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
+
     async function handleLogout() {
-        const res = await logoutUser()
+        const res = await logoutUser();
 
         if (res.status === 200) {
-            dispatch(logout())
+            dispatch(logout());
             navigate("/");
         }
     }
+
+    async function fetchHistory() {
+        try {
+            const res = await getHistory();
+
+            if (res.status === 200) {
+                console.log(res);
+                dispatch(addHistory(res.data));
+            }
+        } catch (error) {
+            console.log("Failed to get history :: ", error);
+        }
+    }
+
+    async function handleQuestionSend() {
+        try {
+            const res = await getResponse(userQuestion);
+
+            if (res.status === 200) {
+                console.log(res);
+                dispatch(
+                    addChat({
+                        question: userQuestion,
+                        answer: res.data.answer,
+                    })
+                );
+            }
+
+            setUserQuestion("");
+        } catch (error) {
+            console.log("Failed to handle question", error);
+        }
+    }
+
+    useEffect(() => {
+        console.log("fetch history");
+        fetchHistory();
+    }, []);
 
     const [recent] = useState([
         "OAuth JavaScript Origins C...",
@@ -34,10 +81,9 @@ function Home() {
     ]);
     return (
         <>
-
             <div className="flex h-screen bg-white text-gray-900">
                 {/* Sidebar */}
-                <aside className="w-64 border-r bg-gray-50 flex flex-col">
+                <aside className="w-64 border-r bg-gray-50 flex flex-col fixed h-screen">
                     <div className="flex items-center justify-between px-4 py-4 border-b">
                         <h1 className="text-lg font-semibold">Gemini</h1>
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded">
@@ -85,34 +131,90 @@ function Home() {
                         <button className="text-sm text-gray-600 hover:text-gray-900">
                             {userInfo.username}
                         </button>
-                        <button onClick={handleLogout} className="text-sm text-gray-600 hover:text-gray-900 cursor-pointer">
+                        <button
+                            onClick={handleLogout}
+                            className="text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
+                        >
                             Logout
                         </button>
                     </div>
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 flex flex-col items-center justify-center">
-                    <h1 className="text-3xl font-semibold text-blue-600 mb-6">
-                        Hello, {userInfo.username.split(' ')[0]}
-                    </h1>
+                <main className="flex-1 flex flex-col mx-auto">
+                    {chats?.length === 0 ? (
+                        // No chats → Input stays in the middle
+                        <div className="flex flex-1 flex-col items-center justify-center">
+                            <h1 className="text-3xl font-semibold text-blue-600 mb-6">
+                                Hello, {userInfo.username.split(" ")[0]}
+                            </h1>
 
-                    <div className="w-full max-w-xl">
-                        <div className="flex items-center bg-gray-100 rounded-full px-4 py-3 shadow-sm">
-                            <FiPlus className="mr-3 text-gray-600" />
-                            <input
-                                type="text"
-                                placeholder="Ask Gemini"
-                                className="flex-1 bg-transparent outline-none text-gray-800"
-                            />
-                            <FiMic className="ml-3 text-gray-600 cursor-pointer" />
+                            <div className="w-full max-w-xl">
+                                <div className="flex items-center bg-gray-100 rounded-full px-4 py-3 shadow-sm">
+                                    <FiPlus className="mr-3 text-gray-600" />
+                                    <input
+                                        type="text"
+                                        placeholder="Ask Gemini"
+                                        value={userQuestion}
+                                        onChange={(e) =>
+                                            setUserQuestion(e.target.value)
+                                        }
+                                        className="flex-1 bg-transparent outline-none text-gray-800"
+                                    />
+                                    <div onClick={handleQuestionSend}>
+                                        <IoSend className="ml-3 text-gray-600 cursor-pointer" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex justify-end mt-2">
-                            <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-                                <FiSearch /> Tools
-                            </button>
+                    ) : (
+                        // Chats exist → Chat history + sticky input
+                        <div className="flex flex-1 flex-col">
+                            {/* Chat History */}
+                            <div className="flex-1 overflow-y-auto px-6 py-4 w-full max-w-4xl mx-auto">
+                                {chats?.map((chat, idx) => (
+                                    <div key={idx} className="mb-6">
+                                        {/* User Question */}
+                                        <div className="flex justify-end">
+                                            <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow">
+                                                {chat.question}
+                                            </div>
+                                        </div>
+
+                                        {/* AI Answer - full width */}
+                                        <div className="mt-3 w-full">
+                                            <div className="bg-white text-gray-700 px-6 py-4 rounded-lg shadow w-full">
+                                                <div className="prose max-w-none">
+                                                    <ReactMarkdown>
+                                                        {chat.answer}
+                                                    </ReactMarkdown>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Sticky Input Bar */}
+                            <div className="sticky bottom-0 bg-white w-full max-w-3xl mx-auto px-4 py-4 border-t">
+                                <div className="flex items-center bg-gray-100 rounded-full px-4 py-3 shadow-sm">
+                                    <FiPlus className="mr-3 text-gray-600" />
+                                    <input
+                                        type="text"
+                                        placeholder="Ask Gemini"
+                                        value={userQuestion}
+                                        onChange={(e) =>
+                                            setUserQuestion(e.target.value)
+                                        }
+                                        className="flex-1 bg-transparent outline-none text-gray-800"
+                                    />
+                                    <div onClick={handleQuestionSend}>
+                                        <IoSend className="ml-3 text-gray-600 cursor-pointer" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </main>
 
                 {/* Profile + Upgrade */}
