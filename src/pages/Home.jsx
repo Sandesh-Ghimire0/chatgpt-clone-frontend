@@ -12,6 +12,9 @@ import { getHistory, getResponse } from "../services/chatService";
 import { addChat } from "../stores/chatSlice";
 import ReactMarkdown from "react-markdown";
 import { addHistory } from "../stores/chatSlice";
+import RecentChat from "../components/RecentChat";
+import NewChat from "../components/NewChat";
+import ExistingChat from "../components/ExistingChat";
 function Home() {
     const [userQuestion, setUserQuestion] = useState("");
 
@@ -98,30 +101,11 @@ function Home() {
 
                         <div className="mt-4">
                             <h2 className="px-4 text-sm font-semibold text-gray-500">
-                                Gems
-                            </h2>
-                            <button className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-200">
-                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                Storybook
-                            </button>
-                            <button className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-gray-200">
-                                <FaRegCircleQuestion />
-                                Explore Gems
-                            </button>
-                        </div>
-
-                        <div className="mt-4">
-                            <h2 className="px-4 text-sm font-semibold text-gray-500">
                                 Recent
                             </h2>
                             <ul>
                                 {recent.map((item, i) => (
-                                    <li
-                                        key={i}
-                                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 cursor-pointer"
-                                    >
-                                        {item}
-                                    </li>
+                                    <RecentChat key={i} item={item} />
                                 ))}
                             </ul>
                         </div>
@@ -144,76 +128,20 @@ function Home() {
                 <main className="flex-1 flex flex-col mx-auto">
                     {chats?.length === 0 ? (
                         // No chats → Input stays in the middle
-                        <div className="flex flex-1 flex-col items-center justify-center">
-                            <h1 className="text-3xl font-semibold text-blue-600 mb-6">
-                                Hello, {userInfo.username.split(" ")[0]}
-                            </h1>
-
-                            <div className="w-full max-w-xl">
-                                <div className="flex items-center bg-gray-100 rounded-full px-4 py-3 shadow-sm">
-                                    <FiPlus className="mr-3 text-gray-600" />
-                                    <input
-                                        type="text"
-                                        placeholder="Ask Gemini"
-                                        value={userQuestion}
-                                        onChange={(e) =>
-                                            setUserQuestion(e.target.value)
-                                        }
-                                        className="flex-1 bg-transparent outline-none text-gray-800"
-                                    />
-                                    <div onClick={handleQuestionSend}>
-                                        <IoSend className="ml-3 text-gray-600 cursor-pointer" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <NewChat
+                            userInfo={userInfo}
+                            userQuestion={userQuestion}
+                            setUserQuestion={setUserQuestion}
+                            handleQuestionSend={handleQuestionSend}
+                        />
                     ) : (
                         // Chats exist → Chat history + sticky input
-                        <div className="flex flex-1 flex-col">
-                            {/* Chat History */}
-                            <div className="flex-1 overflow-y-auto px-6 py-4 w-full max-w-4xl mx-auto">
-                                {chats?.map((chat, idx) => (
-                                    <div key={idx} className="mb-6">
-                                        {/* User Question */}
-                                        <div className="flex justify-end">
-                                            <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg max-w-xs shadow">
-                                                {chat.question}
-                                            </div>
-                                        </div>
-
-                                        {/* AI Answer - full width */}
-                                        <div className="mt-3 w-full">
-                                            <div className="bg-white text-gray-700 px-6 py-4 rounded-lg shadow w-full">
-                                                <div className="prose max-w-none">
-                                                    <ReactMarkdown>
-                                                        {chat.answer}
-                                                    </ReactMarkdown>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Sticky Input Bar */}
-                            <div className="sticky bottom-0 bg-white w-full max-w-3xl mx-auto px-4 py-4 border-t">
-                                <div className="flex items-center bg-gray-100 rounded-full px-4 py-3 shadow-sm">
-                                    <FiPlus className="mr-3 text-gray-600" />
-                                    <input
-                                        type="text"
-                                        placeholder="Ask Gemini"
-                                        value={userQuestion}
-                                        onChange={(e) =>
-                                            setUserQuestion(e.target.value)
-                                        }
-                                        className="flex-1 bg-transparent outline-none text-gray-800"
-                                    />
-                                    <div onClick={handleQuestionSend}>
-                                        <IoSend className="ml-3 text-gray-600 cursor-pointer" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <ExistingChat
+                            chats={chats}
+                            userQuestion={userQuestion}
+                            setUserQuestion={setUserQuestion}
+                            handleQuestionSend={handleQuestionSend}
+                        />
                     )}
                 </main>
 
