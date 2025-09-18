@@ -1,28 +1,33 @@
 import React, { useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { FiSearch, FiPlus, FiMic } from "react-icons/fi";
-import { FaRegCircleQuestion } from "react-icons/fa6";
 import { logoutUser } from "../services/authService";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../stores/authSlice";
-import { IoSend } from "react-icons/io5";
-import { getHistory, getResponse } from "../services/chatService";
+import {
+    getHistory,
+    getRecentChat,
+    getResponse,
+} from "../services/chatService";
 import { addChat } from "../stores/chatSlice";
-import ReactMarkdown from "react-markdown";
 import { addHistory } from "../stores/chatSlice";
 import RecentChat from "../components/RecentChat";
 import NewChat from "../components/NewChat";
 import ExistingChat from "../components/ExistingChat";
+import { addRecentChat } from "../stores/recentChat";
+import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
+
 function Home() {
     const [userQuestion, setUserQuestion] = useState("");
 
     const { userInfo } = useSelector((state) => state.auth);
     const { chats } = useSelector((state) => state.chat);
+    const { recent_chats } = useSelector((state) => state.recentChat);
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { thread_id } = useParams();
 
     async function handleLogout() {
         const res = await logoutUser();
@@ -33,12 +38,12 @@ function Home() {
         }
     }
 
-    async function fetchHistory() {
+    async function fetchHistory(thread_id) {
         try {
-            const res = await getHistory();
+            const res = await getHistory(thread_id);
 
             if (res.status === 200) {
-                console.log(res);
+                console.log(res.data)
                 dispatch(addHistory(res.data));
             }
         } catch (error) {
@@ -46,9 +51,21 @@ function Home() {
         }
     }
 
+    async function fetchRecentChat() {
+        try {
+            const res = await getRecentChat();
+
+            if (res.status === 200) {
+                dispatch(addRecentChat(res.data));
+            }
+        } catch (error) {
+            console.log("Failed to fetch recent chat :: ", error);
+        }
+    }
+
     async function handleQuestionSend() {
         try {
-            const res = await getResponse(userQuestion);
+            const res = await getResponse(userQuestion, thread_id);
 
             if (res.status === 200) {
                 console.log(res);
@@ -58,6 +75,7 @@ function Home() {
                         answer: res.data.answer,
                     })
                 );
+                navigate(`/home/${res.data.thread_id}`);
             }
 
             setUserQuestion("");
@@ -67,21 +85,13 @@ function Home() {
     }
 
     useEffect(() => {
-        console.log("fetch history");
-        fetchHistory();
-    }, []);
+        fetchHistory(thread_id);
+    }, [thread_id]);
 
-    const [recent] = useState([
-        "OAuth JavaScript Origins C...",
-        "Google OAuth Access Token...",
-        "LangChain Chain Input Flow...",
-        "DFD Level 0 Diagram Image",
-        "React Query String Fetching...",
-        "React Services Folder Explai...",
-        "React Landing Page Compo...",
-        "HTML to React JSX Conversi...",
-        "Tailwind Card UI for Task Date",
-    ]);
+    useEffect(() => {
+        fetchRecentChat();
+    },[thread_id]);
+
     return (
         <>
             <div className="flex h-screen bg-white text-gray-900">
@@ -95,17 +105,20 @@ function Home() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
-                        <button className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-gray-200">
+                        <Link to={'/home'} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-gray-200">
                             + New chat
-                        </button>
+                        </Link>
 
                         <div className="mt-4">
                             <h2 className="px-4 text-sm font-semibold text-gray-500">
                                 Recent
                             </h2>
                             <ul>
-                                {recent.map((item, i) => (
-                                    <RecentChat key={i} item={item} />
+                                {recent_chats?.map((item) => (
+                                    <RecentChat
+                                        key={item.thread_id}
+                                        item={item}
+                                    />
                                 ))}
                             </ul>
                         </div>

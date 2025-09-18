@@ -22,7 +22,6 @@ function UserProtectionWrapper({ children }) {
             console.log("Failed to fetch the user :", error);
         }
     }
-    console.log(userInfo)
     useEffect(() => {
         getUser();
     }, []);

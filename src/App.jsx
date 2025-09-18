@@ -16,6 +16,15 @@ function App() {
                         </UserProtectionWrapper>
                     }
                 />
+
+                <Route
+                    path="/home/:thread_id"
+                    element={
+                        <UserProtectionWrapper>
+                            <Home />
+                        </UserProtectionWrapper>
+                    }
+                />
             </Routes>
         </>
     );
