@@ -1,8 +1,9 @@
 import React from "react";
 import { FiPlus } from "react-icons/fi";
 import { IoSend } from "react-icons/io5";
+import {SyncLoader} from 'react-spinners'
 
-function InputBar({ userQuestion, setUserQuestion, handleQuestionSend }) {
+function InputBar({ userQuestion, setUserQuestion, handleQuestionSend, isLoading }) {
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) { 
             e.preventDefault();  // prevent newline in input
@@ -12,7 +13,7 @@ function InputBar({ userQuestion, setUserQuestion, handleQuestionSend }) {
 
     return (
         <div className="flex items-center bg-gray-100 rounded-full px-4 py-3 shadow-sm">
-            <FiPlus className="mr-3 text-gray-600" />
+            {isLoading && <SyncLoader className="mr-3" size='6' />}
             <input
                 type="text"
                 placeholder="Ask Gemini"

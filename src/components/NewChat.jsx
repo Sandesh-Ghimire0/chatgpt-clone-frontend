@@ -6,6 +6,7 @@ function NewChat({
     userQuestion,
     setUserQuestion,
     handleQuestionSend,
+    isLoading
 }) {
     return (
         <div className="flex flex-1 flex-col items-center justify-center">
@@ -18,6 +19,7 @@ function NewChat({
                     userQuestion={userQuestion}
                     setUserQuestion={setUserQuestion}
                     handleQuestionSend={handleQuestionSend}
+                    isLoading={isLoading}
                 />
             </div>
         </div>

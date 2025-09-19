@@ -1,13 +1,18 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import InputBar from "./InputBar";
+import { useParams } from "react-router-dom";
 
 function ExistingChat({
     chats,
     userQuestion,
     setUserQuestion,
     handleQuestionSend,
+    isLoading
 }) {
+    const chatEndRef = useRef(null);
+
+
     return (
         <div className="flex flex-1 flex-col">
             {/* Chat History */}
@@ -31,6 +36,7 @@ function ExistingChat({
                         </div>
                     </div>
                 ))}
+
             </div>
 
             {/* Sticky Input Bar */}
@@ -39,6 +45,7 @@ function ExistingChat({
                     userQuestion={userQuestion}
                     setUserQuestion={setUserQuestion}
                     handleQuestionSend={handleQuestionSend}
+                    isLoading={isLoading}
                 />
             </div>
         </div>

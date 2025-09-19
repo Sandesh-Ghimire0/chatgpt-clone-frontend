@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 
 function Home() {
     const [userQuestion, setUserQuestion] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const { userInfo } = useSelector((state) => state.auth);
     const { chats } = useSelector((state) => state.chat);
@@ -43,7 +44,7 @@ function Home() {
             const res = await getHistory(thread_id);
 
             if (res.status === 200) {
-                console.log(res.data)
+                console.log(res.data);
                 dispatch(addHistory(res.data));
             }
         } catch (error) {
@@ -64,6 +65,7 @@ function Home() {
     }
 
     async function handleQuestionSend() {
+        setIsLoading(true);
         try {
             const res = await getResponse(userQuestion, thread_id);
 
@@ -78,6 +80,7 @@ function Home() {
                 navigate(`/home/${res.data.thread_id}`);
             }
 
+            setIsLoading(false);
             setUserQuestion("");
         } catch (error) {
             console.log("Failed to handle question", error);
@@ -90,7 +93,7 @@ function Home() {
 
     useEffect(() => {
         fetchRecentChat();
-    },[thread_id]);
+    }, [thread_id]);
 
     return (
         <>
@@ -105,7 +108,10 @@ function Home() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto">
-                        <Link to={'/home'} className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-gray-200">
+                        <Link
+                            to={"/home"}
+                            className="w-full text-left px-4 py-2 text-sm font-medium hover:bg-gray-200"
+                        >
                             + New chat
                         </Link>
 
@@ -146,6 +152,7 @@ function Home() {
                             userQuestion={userQuestion}
                             setUserQuestion={setUserQuestion}
                             handleQuestionSend={handleQuestionSend}
+                            isLoading={isLoading}
                         />
                     ) : (
                         // Chats exist → Chat history + sticky input
@@ -154,6 +161,7 @@ function Home() {
                             userQuestion={userQuestion}
                             setUserQuestion={setUserQuestion}
                             handleQuestionSend={handleQuestionSend}
+                            isLoading={isLoading}
                         />
                     )}
                 </main>
