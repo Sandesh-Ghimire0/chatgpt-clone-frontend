@@ -13,7 +13,7 @@ function InputBar({ userQuestion, setUserQuestion, handleQuestionSend, isLoading
 
     return (
         <div className="flex items-center bg-gray-100 rounded-full px-4 py-3 shadow-sm">
-            {isLoading && <SyncLoader className="mr-3" size='6' />}
+            {isLoading && <SyncLoader className="mr-3" size='6px' />}
             <input
                 type="text"
                 placeholder="Ask Gemini"

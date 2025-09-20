@@ -66,19 +66,42 @@ function Home() {
 
     async function handleQuestionSend() {
         setIsLoading(true);
-        try {
-            const res = await getResponse(userQuestion, thread_id);
+        if (!userQuestion) return;
 
-            if (res.status === 200) {
-                console.log(res);
-                dispatch(
-                    addChat({
-                        question: userQuestion,
-                        answer: res.data.answer,
-                    })
-                );
-                navigate(`/home/${res.data.thread_id}`);
-            }
+        try {
+            // const res = await getResponse(userQuestion, thread_id);
+
+            dispatch(addChat({ question: userQuestion, answer: "" }));
+
+            const url = `${
+                import.meta.env.VITE_BASE_URL
+            }/api/v1/chat/response/${thread_id}?question=${encodeURIComponent(
+                userQuestion
+            )}`;
+            const eventSource = new EventSource(url, { withCredentials: true });
+
+
+            let fullAnswer = ""
+            eventSource.onmessage = (event) => {
+                fullAnswer += event.data
+                dispatch(addChat({answer:fullAnswer, update: true}))
+            };
+
+            eventSource.addEventListener("end",(event)=>{
+                const threadId = event.data
+                navigate(`/home/${threadId}`)
+                setIsLoading(false)
+                setUserQuestion("")
+                eventSource.close()
+            })
+
+            eventSource.onerror = (err) => {
+                console.error("Streaming error:", err);
+                setIsLoading(false);
+                eventSource.close();
+            };
+
+            // navigate(`/home/${res.data.thread_id}`);
 
             setIsLoading(false);
             setUserQuestion("");
