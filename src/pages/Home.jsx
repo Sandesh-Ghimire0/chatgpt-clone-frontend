@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 function Home() {
     const [userQuestion, setUserQuestion] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [reRenderHome , setReRenderHome ] = useState(false)
 
     const { userInfo } = useSelector((state) => state.auth);
     const { chats } = useSelector((state) => state.chat);
@@ -83,14 +84,17 @@ function Home() {
 
             let fullAnswer = ""
             eventSource.onmessage = (event) => {
+                setIsLoading(false)
                 fullAnswer += event.data
                 dispatch(addChat({answer:fullAnswer, update: true}))
             };
 
+            console.log(fullAnswer)
+
             eventSource.addEventListener("end",(event)=>{
                 const threadId = event.data
                 navigate(`/home/${threadId}`)
-                setIsLoading(false)
+                setReRenderHome(prev => !prev)
                 setUserQuestion("")
                 eventSource.close()
             })
@@ -103,7 +107,6 @@ function Home() {
 
             // navigate(`/home/${res.data.thread_id}`);
 
-            setIsLoading(false);
             setUserQuestion("");
         } catch (error) {
             console.log("Failed to handle question", error);
@@ -112,7 +115,7 @@ function Home() {
 
     useEffect(() => {
         fetchHistory(thread_id);
-    }, [thread_id]);
+    }, [thread_id, reRenderHome]);
 
     useEffect(() => {
         fetchRecentChat();
@@ -167,7 +170,7 @@ function Home() {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 flex flex-col mx-auto">
+                <main className="flex-1 flex flex-col pl-50 mx-auto">
                     {chats?.length === 0 ? (
                         // No chats → Input stays in the middle
                         <NewChat
@@ -189,13 +192,6 @@ function Home() {
                     )}
                 </main>
 
-                {/* Profile + Upgrade */}
-                <div className="absolute top-4 right-4 flex items-center gap-3">
-                    <button className="px-4 py-1 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium">
-                        Upgrade
-                    </button>
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-400 to-teal-400"></div>
-                </div>
             </div>
         </>
     );

@@ -1,17 +1,23 @@
 import React, { useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import InputBar from "./InputBar";
-import { useParams } from "react-router-dom";
+import { SyncLoader } from "react-spinners";
 
 function ExistingChat({
     chats,
     userQuestion,
     setUserQuestion,
     handleQuestionSend,
-    isLoading
+    isLoading,
 }) {
     const chatEndRef = useRef(null);
 
+    // Auto-scroll to bottom whenever chats change
+    useEffect(() => {
+        if (chatEndRef.current) {
+            chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [chats, isLoading]);
 
     return (
         <div className="flex flex-1 flex-col">
@@ -26,17 +32,25 @@ function ExistingChat({
                             </div>
                         </div>
 
-                        {/* AI Answer - full width */}
-                        <div className="mt-3 w-full">
-                            <div className="bg-white text-gray-700 px-6 py-4 rounded-lg shadow w-full">
-                                <div className="prose max-w-none">
-                                    <ReactMarkdown>{chat.answer}</ReactMarkdown>
+                        {/* AI Answer */}
+                        {idx === chats.length - 1 && isLoading ? (
+                            <SyncLoader className="mr-3" size="6px" />
+                        ) : (
+                            <div className="mt-3 w-full">
+                                <div className="bg-white text-gray-700 px-6 py-4 rounded-lg shadow w-full">
+                                    <div className="prose max-w-none">
+                                        <ReactMarkdown>
+                                            {chat.answer}
+                                        </ReactMarkdown>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 ))}
 
+                {/* Dummy div for scroll-to-bottom */}
+                <div ref={chatEndRef} />
             </div>
 
             {/* Sticky Input Bar */}
@@ -45,7 +59,6 @@ function ExistingChat({
                     userQuestion={userQuestion}
                     setUserQuestion={setUserQuestion}
                     handleQuestionSend={handleQuestionSend}
-                    isLoading={isLoading}
                 />
             </div>
         </div>
